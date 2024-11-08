@@ -11,5 +11,6 @@ mkdir -p "wp-content/plugins/wordpress-plugin-post-replicator" && curl -o "wp-co
 ```
 
 Or use the following installation script:
+
 [install.sh](./install.sh)
 
