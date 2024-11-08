@@ -4,7 +4,12 @@
 <img src="replicator.png" alt="Hype.dev WordPress POST Replicator" />
 
 ## Installing to `WordPress`
+Just run the following in your WordPress project root.
+
 ```shell
 mkdir -p "wp-content/plugins/wordpress-plugin-post-replicator" && curl -o "wp-content/plugins/wordpress-plugin-post-replicator/index.php" "https://raw.githubusercontent.com/vitche/wordpress-plugin-post-replicator/refs/heads/main/index.php" && echo "Downloaded index.php to wp-content/plugins/wordpress-plugin-post-replicator"
 ```
+
+Or use the following installation script:
+[install.sh](./install.sh)
 
