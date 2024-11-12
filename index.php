@@ -107,6 +107,40 @@ function insert_post_into_wordpress($post_data) {
     // Get the post status from settings
     $post_status = get_option('hype_post_status', 'draft'); // Default to 'draft' if not set
 
+    // Extract and process tags
+    $tag_ids = array();
+    if (isset($post_data['tags']) && !empty($post_data['tags'])) {
+        $tags = $post_data['tags']; // Assuming this is an array of tag names or IDs
+
+        // If tags are provided as IDs, you might need to get their names
+        // If tags are provided as names, proceed to process them
+        if (!is_array($tags)) {
+            // If tags are provided as a comma-separated string, convert to array
+            $tags = explode(',', $tags);
+        }
+
+        // Ensure tags are sanitized
+        $tags = array_map('sanitize_text_field', $tags);
+
+        foreach ($tags as $tag_name) {
+            $tag_name = trim($tag_name);
+            if (!empty($tag_name)) {
+                $tag = get_term_by('name', $tag_name, 'post_tag');
+                if (!$tag) {
+                    // Tag doesn't exist, create it
+                    $tag = wp_insert_term($tag_name, 'post_tag');
+                    if (!is_wp_error($tag)) {
+                        $tag_ids[] = $tag['term_id'];
+                    } else {
+                        error_log('Failed to insert tag: ' . $tag_name . ' - ' . $tag->get_error_message());
+                    }
+                } else {
+                    $tag_ids[] = $tag->term_id;
+                }
+            }
+        }
+    }
+
     // Prepare post data
     $new_post = array(
         'post_name'     => $slug,
@@ -116,6 +150,9 @@ function insert_post_into_wordpress($post_data) {
         // The `get_current_user_id()` may return `0` in the CRON. So, using the default author.
         'post_author'   => 1,
         'post_category' => array(1),
+        'tax_input'     => array(
+            'post_tag' => $tag_ids,
+        ),
     );
 
     // Avoid duplicate posts
@@ -129,6 +166,8 @@ function insert_post_into_wordpress($post_data) {
             if (!empty($post_data['image_url'])) {
                 attach_media_to_post($post_data['image_url'], $post_id);
             }
+            // Log success
+            error_log('Post inserted successfully with ID: ' . $post_id);
         } else {
             error_log('Failed to insert post: ' . $post_id->get_error_message());
         }
