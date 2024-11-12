@@ -2,7 +2,7 @@
 /*
 Plugin Name: Hype.dev WordPress Replicator
 Description: A plugin to import drafts and posts into WordPress through an external REST API.
-Version: 1.0
+Version: 1.1
 Author: Vitche Research Team Developer
 */
 
