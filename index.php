@@ -107,6 +107,21 @@ function insert_post_into_wordpress($post_data) {
     // Get the post status from settings
     $post_status = get_option('hype_post_status', 'draft'); // Default to 'draft' if not set
 
+    // Get the category slug from settings
+    $category_slug = get_option('hype_post_category', '');
+
+    // Get the category ID from the slug
+    $category_id = 1; // Default to 'Uncategorized' if not found
+    if (!empty($category_slug)) {
+        $category = get_category_by_slug($category_slug);
+        if ($category) {
+            $category_id = $category->term_id;
+        } else {
+            // Category not found, you may want to create it or log an error
+            error_log('Category slug "' . $category_slug . '" not found. Using default category.');
+        }
+    }
+
     // Extract and process tags
     $tag_ids = array();
     if (isset($post_data['tags']) && !empty($post_data['tags'])) {
@@ -149,7 +164,7 @@ function insert_post_into_wordpress($post_data) {
         'post_status'   => $post_status,
         // The `get_current_user_id()` may return `0` in the CRON. So, using the default author.
         'post_author'   => 1,
-        'post_category' => array(1),
+        'post_category' => array($category_id),
         'tax_input'     => array(
             'post_tag' => $tag_ids,
         ),
@@ -182,6 +197,7 @@ add_action('admin_init', 'hype_register_settings');
 function hype_register_settings() {
     register_setting('hype_settings_group', 'hype_rest_api_endpoint', 'esc_url_raw');
     register_setting('hype_settings_group', 'hype_post_status', 'sanitize_text_field');
+    register_setting('hype_settings_group', 'hype_post_category', 'sanitize_text_field'); // New setting for category slug
 }
 
 // Add a settings page under the Settings menu
@@ -224,6 +240,13 @@ function hype_render_settings_page() {
                                 <?php esc_html_e('Yes, publish posts immediately (otherwise they will be saved as drafts).', 'hype-replicator'); ?>
                             </label>
                         </fieldset>
+                    </td>
+                </tr>
+                <tr valign="top">
+                    <th scope="row"><label for="hype_post_category"><?php esc_html_e('Default Post Category Slug', 'hype-replicator'); ?></label></th>
+                    <td>
+                        <input type="text" id="hype_post_category" name="hype_post_category" value="<?php echo esc_attr(get_option('hype_post_category')); ?>" class="regular-text" />
+                        <p class="description"><?php esc_html_e('Enter the slug of the category to assign to imported posts. For example:', 'hype-replicator'); ?> <code>news</code></p>
                     </td>
                 </tr>
             </table>
