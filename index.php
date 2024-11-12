@@ -1,10 +1,22 @@
 <?php
 /*
-Plugin Name: Hype.dev WordPress Replicator
-Description: A plugin to import drafts and posts into WordPress through an external REST API.
-Version: 1.1
-Author: Vitche Research Team Developer
+Plugin Name: Hype.dev WordPress Content Replicator
+Plugin URI: https://github.com/vitche/wordpress-plugin-post-replicator
+Description: Seamlessly import and synchronize drafts and posts into your WordPress site from external REST APIs. Enhance your content strategy with automated content replication and keep your website up-to-date effortlessly.
+Version: 1.2.0
+Author: Vitche Research Team
+Author URI: https://hype.dev
+Text Domain: hype-replicator
+Domain Path: /languages
+License: GPL v2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
+Requires PHP: 7.2
+Requires at least: 5.0
+Tested up to: 6.3
+Stable tag: trunk
+Tags: content importer, REST API integration, content replication, automated publishing, WordPress automation, external API, content synchronization
 */
+
 
 // Add a custom interval of every minute
 add_filter('cron_schedules', 'add_custom_cron_intervals');
