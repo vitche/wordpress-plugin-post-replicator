@@ -3,7 +3,7 @@
 Plugin Name: Hype.dev WordPress Content Replicator
 Plugin URI: https://github.com/vitche/wordpress-plugin-post-replicator
 Description: Seamlessly import and synchronize drafts and posts into your WordPress site from external REST APIs. Enhance your content strategy with automated content replication and keep your website up-to-date effortlessly.
-Version: 1.2.0
+Version: 1.3.0
 Author: Vitche Research Team
 Author URI: https://hype.dev
 Text Domain: hype-replicator
@@ -128,43 +128,6 @@ function insert_post_into_wordpress($post_data) {
         $category = get_category_by_slug($category_slug);
         if ($category) {
             $category_id = $category->term_id;
-        } else {
-            // Category not found, you may want to create it or log an error
-            error_log('Category slug "' . $category_slug . '" not found. Using default category.');
-        }
-    }
-
-    // Extract and process tags
-    $tag_ids = array();
-    if (isset($post_data['tags']) && !empty($post_data['tags'])) {
-        $tags = $post_data['tags']; // Assuming this is an array of tag names or IDs
-
-        // If tags are provided as IDs, you might need to get their names
-        // If tags are provided as names, proceed to process them
-        if (!is_array($tags)) {
-            // If tags are provided as a comma-separated string, convert to array
-            $tags = explode(',', $tags);
-        }
-
-        // Ensure tags are sanitized
-        $tags = array_map('sanitize_text_field', $tags);
-
-        foreach ($tags as $tag_name) {
-            $tag_name = trim($tag_name);
-            if (!empty($tag_name)) {
-                $tag = get_term_by('name', $tag_name, 'post_tag');
-                if (!$tag) {
-                    // Tag doesn't exist, create it
-                    $tag = wp_insert_term($tag_name, 'post_tag');
-                    if (!is_wp_error($tag)) {
-                        $tag_ids[] = $tag['term_id'];
-                    } else {
-                        error_log('Failed to insert tag: ' . $tag_name . ' - ' . $tag->get_error_message());
-                    }
-                } else {
-                    $tag_ids[] = $tag->term_id;
-                }
-            }
         }
     }
 
@@ -176,10 +139,7 @@ function insert_post_into_wordpress($post_data) {
         'post_status'   => $post_status,
         // The `get_current_user_id()` may return `0` in the CRON. So, using the default author.
         'post_author'   => 1,
-        'post_category' => array($category_id),
-        'tax_input'     => array(
-            'post_tag' => $tag_ids,
-        ),
+        'post_category' => array($category_id)
     );
 
     // Avoid duplicate posts
@@ -189,18 +149,43 @@ function insert_post_into_wordpress($post_data) {
         $post_id = wp_insert_post($new_post);
 
         if (!is_wp_error($post_id)) {
-            // Attach media if available
+
+            // Handle tags
+            if (isset($post_data['tags']) && !empty($post_data['tags'])) {
+
+                $tags = is_array($post_data['tags']) ? $post_data['tags'] : explode(',', $post_data['tags']);
+                $tags = array_map('trim', array_map('sanitize_text_field', $tags));
+
+                // Create and assign tags
+                $tag_ids = array();
+                foreach ($tags as $tag_name) {
+                    if (!empty($tag_name)) {
+                        $tag = get_term_by('name', $tag_name, 'post_tag');
+                        if (!$tag) {
+                            $new_tag = wp_insert_term($tag_name, 'post_tag');
+                            if (!is_wp_error($new_tag)) {
+                                $tag_ids[] = (int)$new_tag['term_id'];
+                            }
+                        } else {
+                            $tag_ids[] = (int)$tag->term_id;
+                        }
+                    }
+                }
+
+                if (!empty($tag_ids)) {
+                    wp_set_post_tags($post_id, $tag_ids, false);
+                }
+            }
+
+            // Handle featured image
             if (!empty($post_data['image_url'])) {
                 attach_media_to_post($post_data['image_url'], $post_id);
             }
-            // Log success
-            error_log('Post inserted successfully with ID: ' . $post_id);
-        } else {
-            error_log('Failed to insert post: ' . $post_id->get_error_message());
         }
-    } else {
-        error_log('Post already exists: ' . $new_post['post_title']);
+        return $post_id;
     }
+
+    return false;
 }
 
 // Register the plugin settings
