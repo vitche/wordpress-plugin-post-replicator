@@ -49,6 +49,14 @@ function clear_post_import_schedule() {
 // Hook your function to the scheduled event
 add_action('fetch_external_posts_hook', 'fetch_external_posts');
 
+// Execute this extion from an external activation source
+add_action('init', function() {
+    if (isset($_GET['fetch_external_posts_hook']) && $_GET['fetch_external_posts_hook'] === 'run') {
+        do_action('fetch_external_posts_hook');
+        exit('Hook executed');
+    }
+});
+
 function fetch_external_posts() {
 
     // Retrieve the REST API endpoint from settings
