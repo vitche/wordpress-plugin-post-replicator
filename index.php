@@ -3,7 +3,7 @@
 Plugin Name: Hype.dev WordPress Content Replicator
 Plugin URI: https://github.com/vitche/wordpress-plugin-post-replicator
 Description: Seamlessly import and synchronize drafts and posts into your WordPress site from external REST APIs. Enhance your content strategy with automated content replication and keep your website up-to-date effortlessly.
-Version: 1.3.0
+Version: 1.3.2
 Author: Vitche Research Team
 Author URI: https://hype.dev
 Text Domain: hype-replicator
